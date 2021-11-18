@@ -16,12 +16,12 @@ namespace LibshelfAPI.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Title = table.Column<string>(type: "text", nullable: false),
-                    Isbn = table.Column<string>(type: "text", nullable: false),
-                    CoverUrl = table.Column<string>(type: "text", nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: false),
-                    Genres = table.Column<List<string>>(type: "text[]", nullable: false),
-                    Status = table.Column<int>(type: "integer", nullable: false),
-                    Authors = table.Column<List<string>>(type: "text[]", nullable: false),
+                    Isbn = table.Column<string>(type: "text", nullable: true),
+                    CoverUrl = table.Column<string>(type: "text", nullable: true),
+                    Description = table.Column<string>(type: "text", nullable: true),
+                    Genres = table.Column<List<string>>(type: "text[]", nullable: true),
+                    Status = table.Column<string>(type: "text", nullable: false),
+                    Authors = table.Column<List<string>>(type: "text[]", nullable: true),
                     PageCount = table.Column<int>(type: "integer", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)

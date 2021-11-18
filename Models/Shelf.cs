@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace LibshelfAPI.Models;
 
@@ -8,5 +9,5 @@ public class Shelf : BaseEntity
     public string Name { get; set; }
     [NotMapped] public int TotalBook => Books.Count;
 
-    public List<Book> Books { get; set; }
+    [JsonIgnore] public virtual List<Book> Books { get; set; } = null!;
 }

@@ -13,7 +13,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LibshelfAPI.Migrations
 {
     [DbContext(typeof(LibshelfContext))]
-    [Migration("20211118095220_Initial")]
+    [Migration("20211118144818_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -47,33 +47,29 @@ namespace LibshelfAPI.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<List<string>>("Authors")
-                        .IsRequired()
                         .HasColumnType("text[]");
 
                     b.Property<string>("CoverUrl")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<List<string>>("Genres")
-                        .IsRequired()
                         .HasColumnType("text[]");
 
                     b.Property<string>("Isbn")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("PageCount")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Title")
                         .IsRequired()
