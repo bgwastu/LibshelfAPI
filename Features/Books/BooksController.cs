@@ -76,7 +76,7 @@ public class BooksController : ControllerBase
         
         return Ok(new Dictionary<string, string>
         {
-            {"fileName", "images/" + fileName + ".webp"}
+            {"fileName", "/images/" + fileName + ".webp"}
         });
     }
 
@@ -98,6 +98,11 @@ public class BooksController : ControllerBase
             book.Shelves = shelves;
         }
 
+        // Validate Date read and date finished
+        if (book.DateReadUtc is not null && book.DateFinishedUtc is not null && book.DateReadUtc > book.DateFinishedUtc)
+        {
+            return BadRequest("Date read cannot be after date finished");
+        }
 
         _context.Books.Add(book);
         await _context.SaveChangesAsync();

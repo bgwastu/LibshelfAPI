@@ -23,8 +23,8 @@ namespace LibshelfAPI.Migrations
                     Status = table.Column<string>(type: "text", nullable: false),
                     Authors = table.Column<List<string>>(type: "text[]", nullable: true),
                     PageCount = table.Column<int>(type: "integer", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    DateReadUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    DateFinishedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -36,9 +36,7 @@ namespace LibshelfAPI.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "text", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Name = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
