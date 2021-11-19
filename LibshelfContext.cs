@@ -11,6 +11,7 @@ public class LibshelfContext : DbContext
 
     public DbSet<Book> Books { get; set; } = null!;
     public DbSet<Shelf> Shelves { get; set; } = null!;
+    public DbSet<User> Users { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
