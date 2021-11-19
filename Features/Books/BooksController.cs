@@ -16,11 +16,21 @@ public class BooksController : ControllerBase
         _context = context;
     }
 
+    /// <summary>
+    /// Get All books, search by title, author, or ISBN. Returns list of BookResponse
+    /// </summary>
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] string? query)
     {
         var books = await _context.Books.ToListAsync();
-        return Ok(books.Select(BookResponse.FromBook).ToList());
+        if (query != null)
+        {
+            books = books.Where(b =>
+                b.Authors != null && b.Isbn != null &&
+                (b.Title.Contains(query) || b.Authors.Contains(query) || b.Isbn.Contains(query))).ToList();
+        }
+
+        return Ok(books.Select(b => BookResponse.FromBook(b)));
     }
 
     [HttpGet("{id:Guid}")]
@@ -89,7 +99,7 @@ public class BooksController : ControllerBase
         {
             return NotFound();
         }
-        
+
         // Check if cover url already exists
         if (string.IsNullOrEmpty(book.CoverUrl))
         {
@@ -137,7 +147,6 @@ public class BooksController : ControllerBase
 
         return Ok();
     }
-
 
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
