@@ -1,5 +1,6 @@
 ﻿using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
+#pragma warning disable CS8714
 
 namespace LibshelfAPI.Utils;
 
