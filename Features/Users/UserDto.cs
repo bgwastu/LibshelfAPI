@@ -13,7 +13,7 @@ public class UserResponse
     public string Email { get; set; } = null!;
     public string Key { get; set; } = null!;
 
-    public static UserResponse FromLogin(User user, string key)
+    public static UserResponse FromAuth(User user, string key)
     {
         return new UserResponse
         {

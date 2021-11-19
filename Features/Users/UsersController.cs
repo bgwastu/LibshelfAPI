@@ -1,7 +1,12 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using System.Text.RegularExpressions;
 using LibshelfAPI.Features.Books;
+using LibshelfAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace LibshelfAPI.Features.Users;
 
@@ -10,10 +15,12 @@ namespace LibshelfAPI.Features.Users;
 public class UsersController : ControllerBase
 {
     private readonly LibshelfContext _context;
+    private readonly IConfiguration _configuration;
 
-    public UsersController(LibshelfContext context)
+    public UsersController(LibshelfContext context, IConfiguration configuration)
     {
         _context = context;
+        _configuration = configuration;
     }
 
     [HttpPost("register")]
@@ -40,9 +47,9 @@ public class UsersController : ControllerBase
         var user = Models.User.FromUserRegister(userRegister);
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
-        return Ok(user);
+        return Ok(UserResponse.FromAuth(user, GenerateToken(user)));
     }
-    
+
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] UserLogin userLogin)
     {
@@ -58,20 +65,41 @@ public class UsersController : ControllerBase
         {
             return BadRequest("Password is too short");
         }
-
+        
+        // Check email
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
-
         if (user == null)
         {
             return BadRequest("Email is incorrect");
         }
-        
+
         // Check password based on bcrypt
         if (!BCrypt.Net.BCrypt.Verify(password, user.Password))
         {
             return BadRequest("Password is incorrect");
         }
 
-        return Ok(UserResponse.FromLogin(user, "keyplaceholder"));
+        return Ok(UserResponse.FromAuth(user, GenerateToken(user)));
+    }
+
+    private string GenerateToken(User user)
+    {
+        var claims = new Claim[]
+        {
+            new(ClaimTypes.Name, user.Id.ToString()),
+            new(ClaimTypes.Email, user.Email)
+        };
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            _configuration["Jwt:Issuer"],
+            _configuration["Jwt:Audience"],
+            claims,
+            signingCredentials: credentials
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }
