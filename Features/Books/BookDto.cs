@@ -23,7 +23,7 @@ public class BookResponse
     public DateTime? DateReadUtc { get; set; }
     public DateTime? DateFinishedUtc { get; set; }
 
-    public static BookResponse From(Book book)
+    public static BookResponse FromBook(Book book)
     {
         return new BookResponse
         {

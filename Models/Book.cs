@@ -30,7 +30,7 @@ public sealed class Book
     public DateTime? DateFinishedUtc { get; set; }
     public List<Shelf> Shelves { get; set; } = null!;
 
-    public static Book From(BookRequest bookRequest)
+    public static Book FromBookRequest(BookRequest bookRequest)
     {
         return new Book
         {
@@ -45,5 +45,19 @@ public sealed class Book
             DateReadUtc = bookRequest.DateReadUtc,
             DateFinishedUtc = bookRequest.DateFinishedUtc,
         };
+    }
+
+    public void ReplaceWithBookRequest(BookRequest bookRequest)
+    {
+        Title = bookRequest.Title;
+        Isbn = bookRequest.Isbn;
+        CoverUrl = bookRequest.CoverUrl;
+        Description = bookRequest.Description;
+        Genres = bookRequest.Genres;
+        Status = bookRequest.Status;
+        Authors = bookRequest.Authors;
+        PageCount = bookRequest.PageCount;
+        DateReadUtc = bookRequest.DateReadUtc;
+        DateFinishedUtc = bookRequest.DateFinishedUtc;
     }
 }

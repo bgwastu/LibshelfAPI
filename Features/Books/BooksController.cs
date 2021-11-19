@@ -20,7 +20,7 @@ public class BooksController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var books = await _context.Books.ToListAsync();
-        return Ok(books.Select(BookResponse.From).ToList());
+        return Ok(books.Select(BookResponse.FromBook).ToList());
     }
 
     [HttpGet("{id:Guid}")]
@@ -32,7 +32,7 @@ public class BooksController : ControllerBase
             return NotFound();
         }
 
-        var bookResponse = BookResponse.From(book);
+        var bookResponse = BookResponse.FromBook(book);
 
         return Ok(bookResponse);
     }
@@ -48,43 +48,107 @@ public class BooksController : ControllerBase
 
         return Ok(book.Shelves);
     }
-    
-    /// <summary>
-    /// Upload cover image and convert into .webp
-    /// </summary>
-    [HttpPost("uploadCover")]
-    public async Task<IActionResult> UploadCover([FromForm] IFormFile file)
-    {
-        var fileName = Guid.NewGuid();
-        var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images",
-            fileName + Path.GetExtension(file.FileName));
-        var newFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images",
-            fileName + ".webp");
 
+    /// <summary>
+    /// Upload cover image by book id and convert into .webp
+    /// </summary>
+    [HttpPost("{id:Guid}/cover")]
+    public async Task<IActionResult> UploadCover([FromForm] IFormFile file, Guid id)
+    {
+        var book = await _context.Books.FirstOrDefaultAsync(b => b.Id == id);
+        if (book == null)
+        {
+            return NotFound();
+        }
+
+        var fileName = $"{id}.webp";
+        var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", fileName);
 
         await using (var stream = new FileStream(filePath, FileMode.Create))
         {
             await file.CopyToAsync(stream);
         }
 
+        using (var image = new MagickImage(filePath))
+        {
+            image.Format = MagickFormat.WebP;
+            await image.WriteAsync(filePath);
+        }
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Delete cover image by book id
+    /// </summary>
+    [HttpDelete("{id:Guid}/cover")]
+    public async Task<IActionResult> DeleteCover(Guid id)
+    {
+        var book = await _context.Books.FirstOrDefaultAsync(b => b.Id == id);
+        if (book == null)
+        {
+            return NotFound();
+        }
+        
+        // Check if cover url already exists
+        if (string.IsNullOrEmpty(book.CoverUrl))
+        {
+            return BadRequest("Cover url is empty");
+        }
+
+        var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images",
+            book.CoverUrl);
+        System.IO.File.Delete(filePath);
+
+        book.CoverUrl = null;
+        await _context.SaveChangesAsync();
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Replace and upload new cover image by book id
+    /// </summary>
+    [HttpPatch("{id:Guid}/cover")]
+    public async Task<IActionResult> ReplaceCover(Guid id, [FromForm] IFormFile file)
+    {
+        var book = await _context.Books.FirstOrDefaultAsync(b => b.Id == id);
+        if (book == null)
+        {
+            return NotFound();
+        }
+
+        var fileName = $"{id}.webp";
+        var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", fileName);
+
+        await using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
 
         using (var image = new MagickImage(filePath))
         {
-            await image.WriteAsync(newFilePath);
-            System.IO.File.Delete(filePath);
+            image.Format = MagickFormat.WebP;
+            await image.WriteAsync(filePath);
         }
-        
-        return Ok(new Dictionary<string, string>
-        {
-            {"fileName", "/images/" + fileName + ".webp"}
-        });
+
+        book.CoverUrl = fileName;
+        await _context.SaveChangesAsync();
+
+        return Ok();
     }
+
 
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     public async Task<IActionResult> Post([FromBody] BookRequest bookRequest)
     {
-        var book = Book.From(bookRequest);
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var book = Book.FromBookRequest(bookRequest);
 
         if (bookRequest.ShelfIds is not null)
         {
@@ -107,22 +171,25 @@ public class BooksController : ControllerBase
         _context.Books.Add(book);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(Get), new {id = book.Id}, book);
+        return CreatedAtAction(nameof(Get), new {id = book.Id}, BookResponse.FromBook(book));
     }
 
     [HttpPut("{id:Guid}")]
     public async Task<IActionResult> Put(Guid id, [FromBody] BookRequest bookRequest)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
         var bookToUpdate = await _context.Books.FirstOrDefaultAsync(b => b.Id == id);
         if (bookToUpdate == null)
         {
             return NotFound();
         }
 
-        var book = Book.From(bookRequest);
-        book.Id = bookToUpdate.Id;
-        _context.Update(book);
-
+        bookToUpdate.ReplaceWithBookRequest(bookRequest);
+        _context.Update(bookToUpdate);
         await _context.SaveChangesAsync();
 
         return NoContent();
