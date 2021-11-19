@@ -1,4 +1,5 @@
-﻿using LibshelfAPI.Features.Books;
+﻿using System.Security.Claims;
+using LibshelfAPI.Features.Books;
 
 namespace LibshelfAPI.Models;
 
@@ -23,4 +24,6 @@ public class User
             CreatedAt = DateTime.UtcNow
         };
     }
+    
+    
 }

@@ -1,5 +1,8 @@
-﻿using ImageMagick;
+﻿using System.Linq;
+using System.Security.Claims;
+using ImageMagick;
 using LibshelfAPI.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,6 +10,7 @@ namespace LibshelfAPI.Features.Books;
 
 [Route("/api/books")]
 [ApiController]
+[Authorize]
 public class BooksController : ControllerBase
 {
     private readonly LibshelfContext _context;
@@ -22,7 +26,8 @@ public class BooksController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] string? query)
     {
-        var books = await _context.Books.ToListAsync();
+        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var books = await _context.Books.Where(b => b.UserId == userId).ToListAsync();
         if (query != null)
         {
             books = books.Where(b =>
@@ -36,7 +41,8 @@ public class BooksController : ControllerBase
     [HttpGet("{id:Guid}")]
     public async Task<IActionResult> Get(Guid id)
     {
-        var book = await _context.Books.FirstOrDefaultAsync(b => b.Id == id);
+        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var book = await _context.Books.Where(b => b.UserId == userId).FirstOrDefaultAsync(b => b.Id == id);
         if (book == null)
         {
             return NotFound();
@@ -50,7 +56,8 @@ public class BooksController : ControllerBase
     [HttpGet("{id:Guid}/shelves")]
     public async Task<IActionResult> GetShelves(Guid id)
     {
-        var book = await _context.Books.Include(b => b.Shelves).FirstOrDefaultAsync(b => b.Id == id);
+        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var book = await _context.Books.Where(b => b.UserId == userId).Include(b => b.Shelves).FirstOrDefaultAsync(b => b.Id == id);
         if (book == null)
         {
             return NotFound();
@@ -65,7 +72,8 @@ public class BooksController : ControllerBase
     [HttpPost("{id:Guid}/cover")]
     public async Task<IActionResult> UploadCover([FromForm] IFormFile file, Guid id)
     {
-        var book = await _context.Books.FirstOrDefaultAsync(b => b.Id == id);
+        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var book = await _context.Books.Where(b => b.UserId == userId).FirstOrDefaultAsync(b => b.Id == id);
         if (book == null)
         {
             return NotFound();
@@ -94,7 +102,8 @@ public class BooksController : ControllerBase
     [HttpDelete("{id:Guid}/cover")]
     public async Task<IActionResult> DeleteCover(Guid id)
     {
-        var book = await _context.Books.FirstOrDefaultAsync(b => b.Id == id);
+        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var book = await _context.Books.Where(b => b.UserId == userId).FirstOrDefaultAsync(b => b.Id == id);
         if (book == null)
         {
             return NotFound();
@@ -122,7 +131,8 @@ public class BooksController : ControllerBase
     [HttpPatch("{id:Guid}/cover")]
     public async Task<IActionResult> ReplaceCover(Guid id, [FromForm] IFormFile file)
     {
-        var book = await _context.Books.FirstOrDefaultAsync(b => b.Id == id);
+        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var book = await _context.Books.Where(b => b.UserId == userId).FirstOrDefaultAsync(b => b.Id == id);
         if (book == null)
         {
             return NotFound();
@@ -156,8 +166,9 @@ public class BooksController : ControllerBase
         {
             return BadRequest(ModelState);
         }
-
-        var book = Book.FromBookRequest(bookRequest);
+        
+        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var book = Book.Map(bookRequest, userId);
 
         if (bookRequest.ShelfIds is not null)
         {
@@ -191,7 +202,10 @@ public class BooksController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var bookToUpdate = await _context.Books.FirstOrDefaultAsync(b => b.Id == id);
+        // Get user id from current token
+        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+
+        var bookToUpdate = await _context.Books.Where(b => b.UserId == userId).FirstOrDefaultAsync(b => b.Id == id);
         if (bookToUpdate == null)
         {
             return NotFound();
@@ -207,7 +221,8 @@ public class BooksController : ControllerBase
     [HttpDelete("{id:Guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var bookToDelete = await _context.Books.FirstOrDefaultAsync(b => b.Id == id);
+        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var bookToDelete = await _context.Books.Where(b => b.UserId == userId).FirstOrDefaultAsync(b => b.Id == id);
         if (bookToDelete == null)
         {
             return NotFound();
@@ -218,4 +233,5 @@ public class BooksController : ControllerBase
 
         return NoContent();
     }
+    
 }

@@ -86,6 +86,7 @@ public class UsersController : ControllerBase
     {
         var claims = new Claim[]
         {
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Name, user.Id.ToString()),
             new(ClaimTypes.Email, user.Email)
         };

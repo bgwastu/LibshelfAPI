@@ -30,7 +30,10 @@ public sealed class Book
     public DateTime? DateFinishedUtc { get; set; }
     public List<Shelf> Shelves { get; set; } = null!;
 
-    public static Book FromBookRequest(BookRequest bookRequest)
+    public Guid UserId { get; set; }
+    public User User { get; set; }
+
+    public static Book Map(BookRequest bookRequest, Guid userId)
     {
         return new Book
         {
@@ -44,6 +47,7 @@ public sealed class Book
             PageCount = bookRequest.PageCount,
             DateReadUtc = bookRequest.DateReadUtc,
             DateFinishedUtc = bookRequest.DateFinishedUtc,
+            UserId = userId
         };
     }
 
