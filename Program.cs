@@ -35,6 +35,7 @@ builder.Services.AddSwaggerGen(c =>
     c.OperationFilter<SwaggerFileOperationFilter>();
     var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+
     // Include 'SecurityScheme' to use JWT Authentication
     var jwtSecurityScheme = new OpenApiSecurityScheme
     {
@@ -56,7 +57,7 @@ builder.Services.AddSwaggerGen(c =>
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
-        { jwtSecurityScheme, Array.Empty<string>() }
+        {jwtSecurityScheme, Array.Empty<string>()}
     });
 });
 builder.Services.AddSwaggerGenNewtonsoftSupport();
@@ -66,7 +67,11 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Libshelf API");
+        c.RoutePrefix = string.Empty;
+    });
 }
 
 app.UseAuthentication();
