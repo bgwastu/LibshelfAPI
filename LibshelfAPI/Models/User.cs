@@ -1,11 +1,12 @@
-﻿using System.Security.Claims;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 using LibshelfAPI.Features.Books;
 
 namespace LibshelfAPI.Models;
 
 public class User
 {
-    public Guid Id { get; set; }
+    [Key] public Guid Id { get; set; }
     public string Name { get; set; } = null!;
     public string Email { get; set; } = null!;
     public string Password { get; set; } = null!;

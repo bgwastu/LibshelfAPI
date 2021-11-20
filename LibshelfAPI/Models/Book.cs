@@ -15,7 +15,7 @@ public enum BookStatus
 
 public sealed class Book
 {
-    public Guid Id { get; set; }
+    [Key] public Guid Id { get; set; }
     [Required] public string Title { get; set; } = null!;
     public string? Isbn { get; set; }
     public string? CoverUrl { get; set; }

@@ -1,11 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace LibshelfAPI.Models;
 
 public sealed class Shelf
 {
-    public Guid Id { get; set; }
+    [Key] public Guid Id { get; set; }
     public string Name { get; set; } = null!;
 
     public Guid UserId { get; set; }
