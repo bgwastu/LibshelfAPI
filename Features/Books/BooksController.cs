@@ -21,7 +21,7 @@ public class BooksController : ControllerBase
     }
 
     /// <summary>
-    /// Get All books, search by title, author, or ISBN. Returns list of BookResponse
+    /// Get all books, search by title, author, or ISBN. Returns list of BookResponse.
     /// </summary>
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] string? query)
@@ -38,6 +38,9 @@ public class BooksController : ControllerBase
         return Ok(books.Select(b => BookResponse.FromBook(b)));
     }
 
+    /// <summary>
+    /// Get book by id.
+    /// </summary>
     [HttpGet("{id:Guid}")]
     public async Task<IActionResult> Get(Guid id)
     {
@@ -53,11 +56,15 @@ public class BooksController : ControllerBase
         return Ok(bookResponse);
     }
 
+    /// <summary>
+    /// Get book shelves by id.
+    /// </summary>
     [HttpGet("{id:Guid}/shelves")]
     public async Task<IActionResult> GetShelves(Guid id)
     {
         var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
-        var book = await _context.Books.Where(b => b.UserId == userId).Include(b => b.Shelves).FirstOrDefaultAsync(b => b.Id == id);
+        var book = await _context.Books.Where(b => b.UserId == userId).Include(b => b.Shelves)
+            .FirstOrDefaultAsync(b => b.Id == id);
         if (book == null)
         {
             return NotFound();
@@ -67,7 +74,7 @@ public class BooksController : ControllerBase
     }
 
     /// <summary>
-    /// Upload cover image by book id and convert into .webp
+    /// Upload cover image by book id and convert into .webp.
     /// </summary>
     [HttpPost("{id:Guid}/cover")]
     public async Task<IActionResult> UploadCover([FromForm] IFormFile file, Guid id)
@@ -97,7 +104,7 @@ public class BooksController : ControllerBase
     }
 
     /// <summary>
-    /// Delete cover image by book id
+    /// Delete cover image by book id.
     /// </summary>
     [HttpDelete("{id:Guid}/cover")]
     public async Task<IActionResult> DeleteCover(Guid id)
@@ -126,7 +133,7 @@ public class BooksController : ControllerBase
     }
 
     /// <summary>
-    /// Replace and upload new cover image by book id
+    /// Replace and upload new cover image by book id.
     /// </summary>
     [HttpPatch("{id:Guid}/cover")]
     public async Task<IActionResult> ReplaceCover(Guid id, [FromForm] IFormFile file)
@@ -158,6 +165,9 @@ public class BooksController : ControllerBase
         return Ok();
     }
 
+    /// <summary>
+    /// Create new book.
+    /// </summary>
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     public async Task<IActionResult> Post([FromBody] BookRequest bookRequest)
@@ -166,7 +176,7 @@ public class BooksController : ControllerBase
         {
             return BadRequest(ModelState);
         }
-        
+
         var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
         var book = Book.Map(bookRequest, userId);
 
@@ -194,6 +204,9 @@ public class BooksController : ControllerBase
         return CreatedAtAction(nameof(Get), new {id = book.Id}, BookResponse.FromBook(book));
     }
 
+    /// <summary>
+    /// Update book by id.
+    /// </summary>
     [HttpPut("{id:Guid}")]
     public async Task<IActionResult> Put(Guid id, [FromBody] BookRequest bookRequest)
     {
@@ -218,6 +231,9 @@ public class BooksController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Delete book by id.
+    /// </summary>
     [HttpDelete("{id:Guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
@@ -233,5 +249,4 @@ public class BooksController : ControllerBase
 
         return NoContent();
     }
-    
 }
