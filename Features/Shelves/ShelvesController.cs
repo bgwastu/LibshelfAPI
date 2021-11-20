@@ -1,5 +1,8 @@
-﻿using LibshelfAPI.Features.Books;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
+using LibshelfAPI.Features.Books;
 using LibshelfAPI.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,6 +10,7 @@ namespace LibshelfAPI.Features.Shelves;
 
 [Route("/api/shelves")]
 [ApiController]
+[Authorize]
 public class ShelvesController : ControllerBase
 {
     private readonly LibshelfContext _context;
@@ -19,27 +23,30 @@ public class ShelvesController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetShelves()
     {
-        var shelves = await _context.Shelves.Include(s => s.Books).ToListAsync();
+        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var shelves = await _context.Shelves.Where(s => s.UserId == userId).Include(s => s.Books).ToListAsync();
         return Ok(shelves.Select(ShelfResponse.FromShelf));
     }
 
     [HttpGet("{id:Guid}")]
     public async Task<IActionResult> Get([FromRoute] Guid id)
     {
-        var shelf = await _context.Shelves.Include(s => s.Books).FirstOrDefaultAsync(s => s.Id == id);
+        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var shelf = await _context.Shelves.Where(s => s.UserId == userId).Include(s => s.Books).FirstOrDefaultAsync(s => s.Id == id);
         if (shelf == null)
         {
             return NotFound();
         }
 
-        return Ok(shelf);
+        return Ok(ShelfResponse.FromShelf(shelf));
     }
 
     [HttpGet]
     [Route("{id:Guid}/books")]
     public async Task<IActionResult> GetBooks([FromRoute] Guid id)
     {
-        var shelf = await _context.Shelves.Include(s => s.Books).FirstOrDefaultAsync(s => s.Id == id);
+        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var shelf = await _context.Shelves.Where(s => s.UserId == userId).Include(s => s.Books).FirstOrDefaultAsync(s => s.Id == id);
         if (shelf == null)
         {
             return NotFound();
@@ -59,13 +66,15 @@ public class ShelvesController : ControllerBase
         var shelf = new Shelf
         {
             Name = shelfRequest.Name,
+            UserId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!)
         };
 
         _context.Shelves.Add(shelf);
         await _context.SaveChangesAsync();
 
         // Get shelf with books
-        shelf = await _context.Shelves.Include(s => s.Books).FirstOrDefaultAsync(s => s.Id == shelf.Id);
+        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        shelf = await _context.Shelves.Where(s => s.UserId == userId).Include(s => s.Books).FirstOrDefaultAsync(s => s.Id == shelf.Id);
 
         return CreatedAtAction("Get", new {id = shelf!.Id}, ShelfResponse.FromShelf(shelf));
     }
@@ -74,17 +83,19 @@ public class ShelvesController : ControllerBase
     /// Add a book to a shelf
     /// </summary>
     [HttpPost("{id:Guid}/books")]
-    public async Task<IActionResult> CreateBooks([FromRoute] Guid id, [FromBody] ShelfBookRequest shelfBookRequest)
+    public async Task<IActionResult> CreateBooks([FromRoute] Guid id, [FromQuery] [Required] Guid bookId)
     {
         // Check shelf exists
-        var shelf = await _context.Shelves.Include(s => s.Books).FirstOrDefaultAsync(s => s.Id == id);
+        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var shelf = await _context.Shelves.Where(s => s.UserId == userId).Include(s => s.Books).FirstOrDefaultAsync(s => s.Id == id);
         if (shelf == null)
         {
             return NotFound();
         }
 
         // Check book exists
-        var book = await _context.Books.FirstOrDefaultAsync(b => b.Id == shelfBookRequest.BookId);
+        
+        var book = await _context.Books.Where(s => s.UserId == userId).FirstOrDefaultAsync(b => b.Id == bookId);
         if (book == null)
         {
             return NotFound();
@@ -112,14 +123,15 @@ public class ShelvesController : ControllerBase
     public async Task<IActionResult> DeleteBook([FromRoute] Guid id, [FromRoute] Guid bookId)
     {
         // Check shelf exists
-        var shelf = await _context.Shelves.Include(s => s.Books).FirstOrDefaultAsync(s => s.Id == id);
+        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var shelf = await _context.Shelves.Where(s => s.UserId == userId).Include(s => s.Books).FirstOrDefaultAsync(s => s.Id == id);
         if (shelf == null)
         {
             return NotFound();
         }
 
         // Check book exists
-        var book = await _context.Books.FirstOrDefaultAsync(b => b.Id == bookId);
+        var book = await _context.Books.Where(s => s.UserId == userId).FirstOrDefaultAsync(b => b.Id == bookId);
         if (book == null)
         {
             return NotFound();
@@ -141,8 +153,8 @@ public class ShelvesController : ControllerBase
         {
             return BadRequest(ModelState);
         }
-
-        var shelf = await _context.Shelves.FirstOrDefaultAsync(s => s.Id == id);
+        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var shelf = await _context.Shelves.Where(s => s.UserId == userId).FirstOrDefaultAsync(s => s.Id == id);
         if (shelf == null)
         {
             return NotFound();
@@ -156,7 +168,8 @@ public class ShelvesController : ControllerBase
     [HttpDelete("{id:Guid}")]
     public async Task<IActionResult> Delete([FromRoute] Guid id)
     {
-        var shelf = await _context.Shelves.FirstOrDefaultAsync(s => s.Id == id);
+        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        var shelf = await _context.Shelves.Where(s => s.UserId == userId).FirstOrDefaultAsync(s => s.Id == id);
         if (shelf == null)
         {
             return NotFound();

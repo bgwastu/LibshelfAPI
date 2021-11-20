@@ -5,7 +5,6 @@ using LibshelfAPI.Models;
 namespace LibshelfAPI.Features.Shelves;
 
 public record ShelfRequest([Required] string Name);
-public record ShelfBookRequest([Required] Guid BookId);
 
 public class ShelfResponse
 {

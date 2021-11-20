@@ -8,6 +8,8 @@ public sealed class Shelf
     public Guid Id { get; set; }
     public string Name { get; set; } = null!;
 
+    public Guid UserId { get; set; }
+    
     public User User { get; set; } = null!;
     [JsonIgnore] public List<Book> Books { get; set; } = null!;
 }

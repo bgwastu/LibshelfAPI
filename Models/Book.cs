@@ -31,7 +31,7 @@ public sealed class Book
     public List<Shelf> Shelves { get; set; } = null!;
 
     public Guid UserId { get; set; }
-    public User User { get; set; }
+    public User User { get; set; } = null!;
 
     public static Book Map(BookRequest bookRequest, Guid userId)
     {
