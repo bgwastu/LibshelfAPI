@@ -11,11 +11,20 @@ jobs:
         runs-on: ubuntu-latest
         steps:
         - uses: actions/checkout@v2
+        - uses: microsoft/variable-substitution@v1 
+          with:
+            files: '**/appsettings.json'
+          env:
+            ConnectionStrings.DefaultConnection: ${{ secrets.DATABASE_URL }}
+            Jwt.Key: ${{ secrets.JWT_KEY }}
+            Jwt.Issuer: ${{ secrets.JWT_ISSUER }}
+            Jwt.Audience: ${{ secrets.JWT_AUDIENCE }}
         - name: Build and deploy the Docker image
           env: 
             HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
             APP_NAME: ${{ secrets.APP_NAME }}
           run: |
+            cd LibshelfAPI/
             docker login --username=_ --password=$HEROKU_API_KEY registry.heroku.com
             heroku container:push web -a $APP_NAME
             heroku container:release web -a $APP_NAME
