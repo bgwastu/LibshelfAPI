@@ -1,5 +1,5 @@
 # Libshelf API ![GitHub](https://img.shields.io/github/license/atticdev/LibshelfAPI) ![deploy workflow](https://github.com/atticdev/LibshelfAPI/actions/workflows/deploy-heroku.yml/badge.svg)
-Libshelf is book cataloging app that helps you to manage your personal book collection or a home library. This project is a REST API for [Libshelf app](https://github.com/atticdev/libshelf_app). See Swagger live API documentation at https://libshelf.herokuapp.com/.
+Libshelf is book cataloging app that helps you to manage your personal book collection or a home library. See Swagger live API documentation at https://libshelf.herokuapp.com/.
 
 **Features:**
 - Manage books, this include create, read, update and delete.
